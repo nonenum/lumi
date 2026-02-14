@@ -10,8 +10,8 @@ import time
 gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk, Gdk, GLib, GdkPixbuf
 
-g_application_version = "a1.1"
-g_code_name = "Inertia"
+g_application_version = "a1.2"
+g_code_name = "Meridian"
 
 
 class Lumi(Gtk.ApplicationWindow):
@@ -24,7 +24,7 @@ class Lumi(Gtk.ApplicationWindow):
 
         css_provider = Gtk.CssProvider()
         css_provider.load_from_data(b"""
-                window {
+                window.background {
                     background-color: transparent;
                     box-shadow: none;
                 }
@@ -40,6 +40,26 @@ class Lumi(Gtk.ApplicationWindow):
                     background-color: transparent;
                     box-shadow: none;
                     border: none;
+                }
+                popover {
+                    background-color: rgba(255, 255, 255, 0.9);
+                    color: black;
+                    border: 1px solid #ccc;
+                    border-radius: 12px;
+                    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
+                    padding: 10px;
+                }
+                popover > contents {
+                    background: transparent;
+                }
+                button {
+                    background: white;
+                    color: black;
+                    margin: 5px;
+                    font-weight: bold;
+                }
+                button:hover {
+                    background: #E0E0E0;
                 }
             """)
 
@@ -59,7 +79,7 @@ class Lumi(Gtk.ApplicationWindow):
         self.is_dragging = False
 
         click_controller = Gtk.GestureClick()
-        click_controller.set_button(0)
+        click_controller.set_button(1)
 
         click_controller.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
 
@@ -74,6 +94,16 @@ class Lumi(Gtk.ApplicationWindow):
 
         self.handle.add_controller(motion_controller)
 
+        self.is_walking = False
+        self.setup_menu()
+
+        right_click_controller = Gtk.GestureClick()
+        right_click_controller.set_button(3)
+        right_click_controller.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+        right_click_controller.connect("pressed", self.on_right_click)
+
+        self.handle.add_controller(right_click_controller)
+
         self.pos_x = 100
         self.pos_y = 160
         self.walk_direction = 1
@@ -83,8 +113,53 @@ class Lumi(Gtk.ApplicationWindow):
         GLib.timeout_add(1000, self.force_always_on_top)
         GLib.timeout_add(50, self.auto_walk)
 
+    def setup_menu(self):
+        self.popover = Gtk.Popover()
+        self.popover.set_parent(self.image)
+
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+
+        self.popover.set_child(box)
+        self.button_walk = Gtk.Button(label="Walk")
+        self.button_walk.connect("clicked", self.toggle_walk)
+
+        self.button_quit = Gtk.Button(label="Bye Lumi!")
+        self.button_quit.connect("clicked", self.quit_app)
+
+        box.append(self.button_walk)
+        box.append(self.button_quit)
+
+    def on_right_click(self, gesture, n_press, x, y):
+        gesture.set_state(Gtk.EventSequenceState.CLAIMED)
+
+        rect = Gdk.Rectangle()
+        rect.x = int(x)
+        rect.y = int(y)
+        rect.width = 1
+        rect.height = 1
+
+        self.popover.set_pointing_to(rect)
+
+        print("[LUMI]: Opening bubble...")
+
+        self.popover.popup()
+
+    def toggle_walk(self, button):
+        self.is_walking = not self.is_walking
+
+        if self.is_walking:
+            self.button_walk.set_label("Rest")
+        else:
+            self.button_walk.set_label("Walk")
+
+        self.popover.popdown()
+
+    def quit_app(self, button):
+        print("[LUMI]: Lumi is going to sleep...")
+        self.close()
+
     def auto_walk(self):
-        if self.is_dragging:
+        if self.is_dragging or not self.is_walking:
             return True
 
         speed = 2
@@ -115,6 +190,7 @@ class Lumi(Gtk.ApplicationWindow):
             os.system("wmctrl -r 'Lumi' -b add,above")
         except Exception as e:
             print(f"[LUMI]: Failed to pin window: {e}")
+
         return False
 
     def on_pressed(self, gesture, n_press, x, y):
@@ -146,8 +222,6 @@ class Lumi(Gtk.ApplicationWindow):
                     self.pos_x = int(i.split("=")[1])
                 elif i.startswith("Y="):
                     self.pos_y = int(i.split("=")[1])
-
-            print(f"[LUMI]: Synced Position to: {self.pos_x} | {self.pos_y}")
 
         except Exception as e:
             print(f"[LUMI]: Couldn't Sync Position: {e}")
