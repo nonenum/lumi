@@ -3,7 +3,7 @@
 
 My first Linux specific program, made for personal use, and entertainment.
 
-![Lumi Walking on Kirlian Selections](res/demo/screenshot.png){width=350}
+<img src="res/demo/screenshot.png" alt="Lumi Walking on Kirlian Selections" width="350"/>
 
 ### Requirements
 
