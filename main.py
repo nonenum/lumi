@@ -3,11 +3,12 @@ import os
 os.environ["GDK_BACKEND"] = "x11"
 
 import sys
+import subprocess
 import gi
 import time
 
 gi.require_version('Gtk', '4.0')
-from gi.repository import Gtk, Gdk, GLib
+from gi.repository import Gtk, Gdk, GLib, GdkPixbuf
 
 g_application_version = "a1.1"
 g_code_name = "Inertia"
@@ -44,7 +45,11 @@ class Lumi(Gtk.ApplicationWindow):
 
         Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
-        self.image = Gtk.Image.new_from_file("res/idle.png")
+        self.texture_right = Gdk.Texture.new_from_filename("res/idle.png")
+        self.texture_left = Gdk.Texture.new_from_filename("res/idle_var.png")
+        self.texture_grabbed = Gdk.Texture.new_from_filename("res/grabbed.png")
+
+        self.image = Gtk.Image.new_from_paintable(self.texture_right)
         self.image.set_pixel_size(300)
 
         self.handle = Gtk.WindowHandle()
@@ -70,7 +75,7 @@ class Lumi(Gtk.ApplicationWindow):
         self.handle.add_controller(motion_controller)
 
         self.pos_x = 100
-        self.pos_y = 300
+        self.pos_y = 160
         self.walk_direction = 1
 
         self.present()
@@ -86,10 +91,15 @@ class Lumi(Gtk.ApplicationWindow):
 
         self.pos_x += speed * self.walk_direction
 
-        if self.pos_x > 500:
+        left_boundary = 200
+        right_boundary = 500
+
+        if self.pos_x > right_boundary:
             self.walk_direction = -1
-        elif self.pos_x < 100:
+            self.image.set_from_paintable(self.texture_left)
+        elif self.pos_x < left_boundary:
             self.walk_direction = 1
+            self.image.set_from_paintable(self.texture_right)
 
         try:
             cmd = f"wmctrl -r 'Lumi' -e 0,{self.pos_x},{self.pos_y},-1,-1"
@@ -108,7 +118,8 @@ class Lumi(Gtk.ApplicationWindow):
         return False
 
     def on_pressed(self, gesture, n_press, x, y):
-        self.image.set_from_file("res/grabbed.png")
+        self.is_dragging = True
+        self.image.set_from_paintable(self.texture_grabbed)
 
     def on_status_check(self, controller, x, y):
         event = controller.get_current_event()
@@ -117,7 +128,29 @@ class Lumi(Gtk.ApplicationWindow):
             state = event.get_modifier_state()
 
             if not (state & Gdk.ModifierType.BUTTON1_MASK):
-                self.image.set_from_file("res/idle.png")
+                self.is_dragging = False
+
+                if self.walk_direction == 1:
+                    self.image.set_from_paintable(self.texture_right)
+                else:
+                    self.image.set_from_paintable(self.texture_left)
+
+                self.sync_position()
+
+    def sync_position(self):
+        try:
+            output = subprocess.check_output(["xdotool", "search", "--name", "Lumi", "getwindowgeometry", "--shell"], text=True)
+
+            for i in output.splitlines():
+                if i.startswith("X="):
+                    self.pos_x = int(i.split("=")[1])
+                elif i.startswith("Y="):
+                    self.pos_y = int(i.split("=")[1])
+
+            print(f"[LUMI]: Synced Position to: {self.pos_x} | {self.pos_y}")
+
+        except Exception as e:
+            print(f"[LUMI]: Couldn't Sync Position: {e}")
 
 
 class LumiApplication(Gtk.Application):

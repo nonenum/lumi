@@ -3,16 +3,22 @@
 
 My first Linux specific program, made for personal use, and entertainment.
 
+![Lumi Walking on Kirlian Selections](res/demo/screenshot.png){width=350}
+
 ### Requirements
 
 This program forces the legacy x11
 
-You need to install **wmctrl** for your distribution in order to run Lumi
+You need to install **wmctrl**, and **xdotool** for your distribution in order to run Lumi
 
-In Fedora's case use:
+In Fedora's case, use:
 
 ```bash
   sudo dnf install wmctrl
+```
+
+```bash
+  sudo dnf install xdotool
 ```
 
 ## Disclaimer
