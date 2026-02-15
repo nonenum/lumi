@@ -10,13 +10,15 @@ import time
 gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk, Gdk, GLib, GdkPixbuf
 
-g_application_version = "a1.2"
+g_application_version = "a1.2.1"
 g_code_name = "Meridian"
 
 
 class Lumi(Gtk.ApplicationWindow):
     def __init__(self, app):
         super().__init__(application=app)
+
+        print("[LUMI]: Launching version a.1.2.1 -- Meridian")
 
         self.set_title("Lumi")
         self.set_decorated(False)
@@ -107,6 +109,7 @@ class Lumi(Gtk.ApplicationWindow):
         self.pos_x = 100
         self.pos_y = 160
         self.walk_direction = 1
+        self.walk_sync = 100
 
         self.present()
 
@@ -166,13 +169,12 @@ class Lumi(Gtk.ApplicationWindow):
 
         self.pos_x += speed * self.walk_direction
 
-        left_boundary = 200
-        right_boundary = 500
+        boundary_offset = 150
 
-        if self.pos_x > right_boundary:
+        if self.pos_x > self.walk_sync + boundary_offset:
             self.walk_direction = -1
             self.image.set_from_paintable(self.texture_left)
-        elif self.pos_x < left_boundary:
+        elif self.pos_x < self.walk_sync - boundary_offset:
             self.walk_direction = 1
             self.image.set_from_paintable(self.texture_right)
 
@@ -222,6 +224,8 @@ class Lumi(Gtk.ApplicationWindow):
                     self.pos_x = int(i.split("=")[1])
                 elif i.startswith("Y="):
                     self.pos_y = int(i.split("=")[1])
+
+            self.walk_sync = self.pos_x
 
         except Exception as e:
             print(f"[LUMI]: Couldn't Sync Position: {e}")
