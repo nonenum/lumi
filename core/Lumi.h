@@ -16,6 +16,8 @@
 #include <QMenu>
 #include <QAction>
 #include <QContextMenuEvent>
+#include <QSystemTrayIcon>
+#include <QStyle>
 
 #include "Globals.h"
 
@@ -80,11 +82,15 @@ private:
     QTimer* m_physics_timer;
     QTimer* m_decision_timer;
 
+    QSystemTrayIcon* m_tray_icon;
+    QMenu* m_tray_menu;
+
     void SetAction(ActionState a_new_state);
     void CalcFloor();
     void CheckWalkingState();
     void UpdateSprite();
     void LoadSprites();
+    void SetupSystemTray();
 };
 
 #endif

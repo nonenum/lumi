@@ -7,7 +7,10 @@ Lumi::Lumi(QWidget *parent) : QWidget(parent), m_physics_state(PhysicsState::FAL
     setAttribute(Qt::WA_TranslucentBackground);
 
     LoadSprites();
+    SetupSystemTray();
+
     resize(G_DISPLAY_WIDTH, G_DISPLAY_HEIGHT);
+
     SetAction(ActionState::IDLE);
     UpdateSprite();
 
@@ -234,4 +237,22 @@ void Lumi::LoadSprites() {
     m_assets[ActionState::WALKING] = QPixmap("../res/idle.png").scaled(G_SPRITE_WIDTH, G_SPRITE_HEIGHT);
     m_assets[ActionState::SCROLLING_PHONE] = QPixmap("../res/phone.png").scaled(G_SPRITE_WIDTH, G_SPRITE_HEIGHT);
     m_assets[ActionState::SLEEPING] = QPixmap("../res/sleeping.png").scaled(G_SPRITE_WIDTH, G_SPRITE_HEIGHT);
+}
+
+void Lumi::SetupSystemTray() {
+    m_tray_icon = new QSystemTrayIcon(this);
+
+    QIcon icon = style()->standardIcon(QStyle::SP_ComputerIcon);
+
+    m_tray_icon->setIcon(icon);
+    m_tray_icon->setToolTip("Lumi");
+
+    m_tray_menu = new QMenu(this);
+
+    QAction* quit = m_tray_menu->addAction("Bye Lumi!");
+
+    connect(quit, &QAction::triggered, qApp, &QApplication::quit);
+
+    m_tray_icon->setContextMenu(m_tray_menu);
+    m_tray_icon->show();
 }

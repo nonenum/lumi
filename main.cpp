@@ -1,6 +1,5 @@
 // Copyright (c) nonenum 2026.
 
-#include <QApplication>
 #include "core/Lumi.h"
 
 int main(int argc, char *argv[]) {
