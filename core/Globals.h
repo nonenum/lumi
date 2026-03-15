@@ -10,7 +10,9 @@ inline std::string G_APPLICATION_DEVELOPER = "nonenum";
 inline std::string G_APPLICATION_VERSION = "Alpha 1.4";
 inline std::string G_APPLICATION_CODE_NAME = "Echo";
 
-inline int G_DISPLAY_WIDTH = 150;
-inline int G_DISPLAY_HEIGHT = 225;
+inline int G_DISPLAY_WIDTH = 160;
+inline int G_DISPLAY_HEIGHT = 128;
+inline int G_SPRITE_WIDTH = 64;
+inline int G_SPRITE_HEIGHT = 128;
 
 #endif //LUMI_GLOBALS_H
